@@ -1,3 +1,7 @@
+'''
+    Author: Manjunath M
+    Landmark based headpose demo
+'''
 import cv2
 import dlib
 import numpy as np
