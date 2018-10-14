@@ -1,5 +1,6 @@
 '''
     Author: Manjunath M
+    Email: mnj.m0@yahoo.com
     Dlib Landmarks Demo
 '''
 import numpy as np

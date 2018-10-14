@@ -1,9 +1,11 @@
 '''
     Author: Manjunath M
+    Email: mnj.m0@yahoo.com
     Landmark based headpose demo
 '''
 import cv2
 import dlib
+import math
 import numpy as np
 import argparse
 
@@ -42,6 +44,30 @@ def getCameraMatrix(imgSize):
                         (0, 0, 1)
                         ], dtype=np.float64)
     return cameraMat
+
+def rotationMatrixToEulerAngles(R):
+    def isRotationMatrix(R):
+        Rt = np.transpose(R)
+        shouldBeIdentity = np.dot(Rt, R)
+        I = np.identity(3, dtype = R.dtype)
+        n = np.linalg.norm(I - shouldBeIdentity)
+        return n < 1e-6
+
+    assert(isRotationMatrix(R))
+    sy = math.sqrt(R[0,0] * R[0,0] +  R[1,0] * R[1,0])
+    singular = sy < 1e-6
+    if  not singular :
+        x = math.atan2(R[2,1] , R[2,2])
+        y = math.atan2(-R[2,0], sy)
+        z = math.atan2(R[1,0], R[0,0])
+    else :
+        x = math.atan2(-R[1,2], R[1,1])
+        y = math.atan2(-R[2,0], sy)
+        z = 0
+    x *= 180.0/np.pi
+    y *= 180.0/np.pi
+    z *= 180.0/np.pi
+    return x, y, z
 
 def getLandmarks(img):
     global faceBBoxDetector
@@ -103,7 +129,9 @@ def main():
         landmarks2d = landmarks2d.astype(np.float64)
         success, rotationVec, translationVec = cv2.solvePnP(landmarks3d, landmarks2d.T, cameraMat,
                                                 distCoeffs, flags=cv2.SOLVEPNP_ITERATIVE)
-        # rotationMat = cv2.Rodrigues(rotationVec)[0]
+        rotationMat = cv2.Rodrigues(rotationVec)[0]
+        pitch, yaw, roll = rotationMatrixToEulerAngles(rotationMat)
+        plotTextonImg(frame, "Pitch:{:3.2}, Yaw:{:3.2}, Roll:{:3.2} ".format(pitch, yaw, roll))
         noseEndPoint = cv2.projectPoints(np.array([(0,0,1000.0)]), rotationVec, translationVec,
                                                 cameraMat, distCoeffs)[0]
         
@@ -120,4 +148,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
