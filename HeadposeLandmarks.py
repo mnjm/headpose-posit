@@ -9,16 +9,19 @@ import math
 import numpy as np
 import argparse
 
-landmarkModelFile = '/home/mm/Workspace/Trained_Models/shape_predictor_68_face_landmarks.dat'
+landmarkModelFile = './shape_predictor_68_face_landmarks.dat'
 
 argParser = argparse.ArgumentParser()
 argParser.add_argument('--landmark_model', default=landmarkModelFile,
                     help='Location of the Landmark File.')
-argParser.add_argument('--video_file', default='/dev/video0',
+argParser.add_argument('--video', default='/dev/video0',
                     help='Video Source File. Default Web Cam')
+argParser.add_argument('--save_video', default=False, action="store_true",
+                       help="Save the video file?")
 args = argParser.parse_args()
 landmarkModelFile = args.landmark_model
-videoSource = args.video_file
+videoSource = args.video
+saveVideo = args.save_video
 
 faceBBoxDetector = dlib.get_frontal_face_detector()
 landmarksPredictor = dlib.shape_predictor(landmarkModelFile)
@@ -80,7 +83,7 @@ def getLandmarks(img):
         return landmarks
 
     # def getMaxAreaRect(rects):
-    #     areas = [(rect.bottom()-rect.top())*(rect.right()-rect.left()) for rect in rects]    
+    #     areas = [(rect.bottom()-rect.top())*(rect.right()-rect.left()) for rect in rects]
     #     areas = np.array(areas)
     #     idx = np.where(areas == max(areas))
     #     return rects[idx]
@@ -111,11 +114,18 @@ def main():
     cameraMat = getCameraMatrix(frame.shape)
     distCoeffs = np.zeros((4,1)) # Assuming no distortions.
 
+    videoWriter = None
+
     while True:
         success, frame = videoCapture.read()
         if not success:
             print('Error: Could not read the frame')
             break
+
+        if saveVideo and (not videoWriter):
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            videoWriter = cv2.VideoWriter('output.mp4', fourcc, 30.0, (frame.shape[1],frame.shape[0]))
+
         success, landmarks = getLandmarks(frame)
         if not success:
             plotTextonImg(frame, 'Face not detected.')
@@ -131,20 +141,25 @@ def main():
                                                 distCoeffs, flags=cv2.SOLVEPNP_ITERATIVE)
         rotationMat = cv2.Rodrigues(rotationVec)[0]
         pitch, yaw, roll = rotationMatrixToEulerAngles(rotationMat)
-        plotTextonImg(frame, "Pitch:{:3.2}, Yaw:{:3.2}, Roll:{:3.2} ".format(pitch, yaw, roll))
+        # plotTextonImg(frame, "Pitch:{:3.2}, Yaw:{:3.2}, Roll:{:3.2} ".format(pitch, yaw, roll))
         noseEndPoint = cv2.projectPoints(np.array([(0,0,1000.0)]), rotationVec, translationVec,
                                                 cameraMat, distCoeffs)[0]
-        
+
         point1 = (int(landmarks2d[0,0]), int(landmarks2d[1,0]))
         point2 = (int(noseEndPoint[0][0][0]), int(noseEndPoint[0][0][1]))
         cv2.line(frame, point1, point2, (255,0,0), 2)
 
         cv2.imshow('Video Feed', frame)
+
+        if videoWriter:
+            videoWriter.write(frame)
+
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             break
     cv2.destroyAllWindows()
     videoCapture.release()
+    if videoWriter: videoWriter.release()
 
 if __name__ == '__main__':
     main()

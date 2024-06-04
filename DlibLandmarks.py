@@ -9,15 +9,15 @@ import cv2
 import argparse
 
 argParser = argparse.ArgumentParser()
-argParser.add_argument("--use_video",
+argParser.add_argument("--video",
                 default='/dev/video0',
                 help='Video File to Use. Default webcam')
-argParser.add_argument("--landmark_model", 
-                default='/home/mm/Workspace/Trained_Models/shape_predictor_68_face_landmarks.dat',
+argParser.add_argument("--landmark_model",
+                default='./shape_predictor_68_face_landmarks.dat',
                 help='Dlib Landmarks Predictor Model File')
 args = argParser.parse_args()
 predictorFile = args.landmark_model
-videoSource = args.use_video
+videoSource = args.video
 
 def shapeToLandmarks(shape):
     landmarks = np.zeros((2,68), dtype=np.uint32)
