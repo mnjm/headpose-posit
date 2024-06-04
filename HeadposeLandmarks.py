@@ -142,7 +142,7 @@ def main():
         rotationMat = cv2.Rodrigues(rotationVec)[0]
         pitch, yaw, roll = rotationMatrixToEulerAngles(rotationMat)
         # plotTextonImg(frame, "Pitch:{:3.2}, Yaw:{:3.2}, Roll:{:3.2} ".format(pitch, yaw, roll))
-        noseEndPoint = cv2.projectPoints(np.array([(0,0,1000.0)]), rotationVec, translationVec,
+        noseEndPoint = cv2.projectPoints(np.array([(0,0,250.0)]), rotationVec, translationVec,
                                                 cameraMat, distCoeffs)[0]
 
         point1 = (int(landmarks2d[0,0]), int(landmarks2d[1,0]))
