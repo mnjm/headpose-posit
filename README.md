@@ -1,5 +1,3 @@
-# Landmarks-Posit
+# Head Pose Estimation using DLib Landmarks
 
-Dlib Landmarks based Head Pose Estimation Demo
-
-Dlib Landmarks Demo
+![Demo](./output.mp4)
